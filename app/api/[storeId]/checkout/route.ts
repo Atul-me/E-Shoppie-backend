@@ -34,7 +34,10 @@ export async function POST(
 
   const line_items: Stripe.Checkout.SessionCreateParams.LineItem[] = [];
 
-  products.forEach((product) => {
+products.forEach((product) => {
+  if (typeof product.price !== 'number') {
+    // Handle the case where the price is not a number, e.g., show an error, skip the product, or use a default value.
+  } else {
     line_items.push({
       quantity: 1,
       price_data: {
@@ -42,10 +45,27 @@ export async function POST(
         product_data: {
           name: product.name,
         },
-        unit_amount: product.price.toNumber() * 100
+        unit_amount: Math.round(product.price * 100) // Convert to cents
       }
     });
-  });
+  }
+});
+
+
+  // const line_items: Stripe.Checkout.SessionCreateParams.LineItem[] = [];
+
+  // products.forEach((product) => {
+  //   line_items.push({
+  //     quantity: 1,
+  //     price_data: {
+  //       currency: 'USD',
+  //       product_data: {
+  //         name: product.name,
+  //       },
+  //       unit_amount: product.price.toN umber() * 100
+  //     }
+  //   });
+  // });
 
   const order = await prismadb.order.create({
     data: {
@@ -72,7 +92,7 @@ export async function POST(
     },
     success_url: `${process.env.FRONTEND_STORE_URL}/cart?success=1`,
     cancel_url: `${process.env.FRONTEND_STORE_URL}/cart?canceled=1`,
-    metadata: {
+    metadata: { 
       orderId: order.id
     },
   });
